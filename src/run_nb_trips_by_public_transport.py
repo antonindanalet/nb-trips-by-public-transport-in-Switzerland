@@ -97,7 +97,7 @@ def run_nb_trips_by_public_transport():
                             df_output_by_PT_with_community_abo,
                             df_output_by_PT_with_HT_community_abo], axis=1)
     folder_path_output = Path('../data/output/')
-    df_results.to_csv(folder_path_output / 'nb_trips_per_person.csv', index=True, sep=';', encoding='iso-8859-1')
+    df_results.to_csv(folder_path_output / 'nb_trips_per_person.csv', index=True, sep=',', encoding='iso-8859-1')
 
 
 def get_nb_trips_per_person(df_nb_trips_per_person, check_official_numbers=False):
