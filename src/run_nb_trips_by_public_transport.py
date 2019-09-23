@@ -8,6 +8,16 @@ from pathlib import Path
 
 
 def run_nb_trips_by_public_transport():
+    """ Function generating a csv table in data/output with the number of trips and the daily distance
+    - of the Swiss resident population
+    - by public transport of the Swiss resident population
+    - by public transport of owners of a general abonnement in the Swiss resident population
+    - by public transport of owners of a half fare abonnement in the Swiss resident population
+    - by public transport of owners of a community abonnement in the Swiss resident population
+    - by public transport of owners of a half fare abonnement and a community abo in the Swiss resident population
+    :return: nothing
+    """
+    ''' Get trip data '''
     selected_columns_trips = ['HHNR',
                               'pseudo',
                               'w_rdist',
@@ -28,7 +38,8 @@ def run_nb_trips_by_public_transport():
                            'tag',  # Day of the week: 1 = Monday, ...
                            'f41610a',  # General abonnement: 1 = yes, 2 = no
                            'f41610b',  # Half-fare abonnement: 1 = yes, ...
-                           'f41610c']
+                           'f41610c',  # Community abonnement: 1 = yes, ...
+                           'f41651']  # General abonnement: 1 = 1st class, 2 = 2nd class
     df_zp = get_zp(2015, selected_columns_zp)
     df_nb_trips_per_person = pd.merge(df_nb_trips_per_person, df_zp, left_on='HHNR', right_on = 'HHNR', how='right')
     df_nb_trips_per_person.fillna(0, inplace=True)
@@ -39,7 +50,7 @@ def run_nb_trips_by_public_transport():
     df_trips_in_Switzerland_by_public_transport = df_trips_in_Switzerland[df_trips_in_Switzerland['wmittela'] == 3]
     df_trips_in_Switzerland_by_public_transport = df_trips_in_Switzerland_by_public_transport.drop('wmittela', axis=1)
     df_nb_trips_per_person_by_public_transport = df_trips_in_Switzerland_by_public_transport.groupby('HHNR')\
-        .agg({'count_trips':'count', 'w_rdist': 'sum'})
+        .agg({'count_trips': 'count', 'w_rdist': 'sum'})
     df_nb_trips_per_person_by_public_transport = pd.merge(df_nb_trips_per_person_by_public_transport, df_zp,
                                                           left_on='HHNR', right_on='HHNR', how='outer')
     df_nb_trips_per_person_by_public_transport.fillna(0, inplace=True)
@@ -49,9 +60,8 @@ def run_nb_trips_by_public_transport():
 
     ''' Nb trips by public transport for people with a general abonnement '''
     df_nb_trips_per_person_by_public_transport = df_trips_in_Switzerland_by_public_transport.groupby('HHNR')\
-        .agg({'count_trips':'count', 'w_rdist': 'sum'})
+        .agg({'count_trips': 'count', 'w_rdist': 'sum'})
     df_zp_general_abo = df_zp[df_zp['f41610a'] == 1]
-    df_zp.drop('f41610a', axis=1, inplace=True)
     df_nb_trips_per_person_by_PT_with_GA = pd.merge(df_nb_trips_per_person_by_public_transport, df_zp_general_abo,
                                                     left_on='HHNR', right_on='HHNR', how='right')
     del df_zp_general_abo
@@ -61,9 +71,37 @@ def run_nb_trips_by_public_transport():
                                        "général", '+/-',
                                        "Distance journalière en transports publics des possesseurs d'un abonnement "
                                        "général, en km", '+/-']
+    ''' Nb trips by public transport for people with a 1st class general abonnement '''
+    df_nb_trips_per_person_by_public_transport = df_trips_in_Switzerland_by_public_transport.groupby('HHNR') \
+        .agg({'count_trips': 'count', 'w_rdist': 'sum'})
+    df_zp_general_abo_first = df_zp[(df_zp['f41610a'] == 1) & (df_zp['f41651'] == 1)]  # only people with GA 1st class
+    df_nb_trips_per_person_with_GA_first = pd.merge(df_nb_trips_per_person_by_public_transport, df_zp_general_abo_first,
+                                                    left_on='HHNR', right_on='HHNR', how='right')
+    del df_zp_general_abo_first
+    df_nb_trips_per_person_with_GA_first.fillna(0, inplace=True)
+    df_output_by_PT_with_GA_first = get_nb_trips_per_person(df_nb_trips_per_person_with_GA_first)
+    df_output_by_PT_with_GA_first.columns = ["Nombre de déplacements en transports publics des possesseurs d'un "
+                                             "abonnement général 1e classe", '+/-',
+                                             "Distance journalière en transports publics des possesseurs d'un "
+                                             "abonnement général 1e classe, en km", '+/-']
+    ''' Nb trips by public transport for people with a 2nd class general abonnement '''
+    df_nb_trips_per_person_by_public_transport = df_trips_in_Switzerland_by_public_transport.groupby('HHNR') \
+        .agg({'count_trips': 'count', 'w_rdist': 'sum'})
+    df_zp_general_abo_second = df_zp[(df_zp['f41610a'] == 1) & (df_zp['f41651'] == 2)]  # only people with GA 2nd class
+    df_zp.drop(['f41610a', 'f41651'], axis=1, inplace=True)  # We don't need the variables about GA for the following
+    df_nb_trips_per_person_with_GA_second = pd.merge(df_nb_trips_per_person_by_public_transport,
+                                                     df_zp_general_abo_second,
+                                                     left_on='HHNR', right_on='HHNR', how='right')
+    del df_zp_general_abo_second
+    df_nb_trips_per_person_with_GA_second.fillna(0, inplace=True)
+    df_output_by_PT_with_GA_second = get_nb_trips_per_person(df_nb_trips_per_person_with_GA_second)
+    df_output_by_PT_with_GA_second.columns = ["Nombre de déplacements en transports publics des possesseurs d'un "
+                                              "abonnement général 2e classe", '+/-',
+                                              "Distance journalière en transports publics des possesseurs d'un "
+                                              "abonnement général 2e classe, en km", '+/-']
     ''' Nb trips by public transport for people with a half-fare abonnement '''
     df_nb_trips_per_person_by_public_transport = df_trips_in_Switzerland_by_public_transport.groupby('HHNR')\
-        .agg({'count_trips':'count', 'w_rdist': 'sum'})
+        .agg({'count_trips': 'count', 'w_rdist': 'sum'})
     df_zp_half_fare = df_zp[df_zp['f41610b'] == 1]
     df_nb_trips_per_person_by_PT_with_HT = pd.merge(df_nb_trips_per_person_by_public_transport, df_zp_half_fare,
                                                     left_on='HHNR', right_on='HHNR', how='right')
@@ -76,7 +114,7 @@ def run_nb_trips_by_public_transport():
                                        "demi-tarif, en km", '+/-']
     ''' Nb trips by public transport for people with a community abonnement '''
     df_nb_trips_per_person_by_public_transport = df_trips_in_Switzerland_by_public_transport.groupby('HHNR')\
-        .agg({'count_trips':'count', 'w_rdist': 'sum'})
+        .agg({'count_trips': 'count', 'w_rdist': 'sum'})
     df_zp_community_abo = df_zp[df_zp['f41610c'] == 1]
     df_nb_trips_per_person_by_PT_with_community_abo = pd.merge(df_nb_trips_per_person_by_public_transport,
                                                                df_zp_community_abo,
@@ -90,7 +128,7 @@ def run_nb_trips_by_public_transport():
                                                   "abonnement communautaire, en km", '+/-']
     ''' Nb trips by public transport for people with a community abonnement and a half-fare abonnement '''
     df_nb_trips_per_person_by_public_transport = df_trips_in_Switzerland_by_public_transport.groupby('HHNR')\
-        .agg({'count_trips':'count', 'w_rdist': 'sum'})
+        .agg({'count_trips': 'count', 'w_rdist': 'sum'})
     df_zp_HT_community_abo = df_zp[(df_zp['f41610c'] == 1) & (df_zp['f41610b'] == 1)]
     df_nb_trips_per_person_by_PT_with_HT_community_abo = pd.merge(df_nb_trips_per_person_by_public_transport,
                                                                   df_zp_HT_community_abo,
@@ -107,6 +145,8 @@ def run_nb_trips_by_public_transport():
     df_results = pd.concat([df_output_full_population,
                             df_output_by_public_transport,
                             df_output_by_PT_with_GA,
+                            df_output_by_PT_with_GA_first,
+                            df_output_by_PT_with_GA_second,
                             df_output_by_PT_with_HT,
                             df_output_by_PT_with_community_abo,
                             df_output_by_PT_with_HT_community_abo], axis=1)
