@@ -35,7 +35,7 @@ These results are available for the general population. They are also differenti
 - Day of the week (monday to friday, saturday, sunday)
 
 ## Results
-The results can be found in `data/output/<a href="https://github.com/antonindanalet/nb-trips-by-public-transport-in-Switzerland/blob/master/data/output/nb_trips_per_person.csv"nb_trips_per_person.csv</a>`.
+The results can be found in the CSV file <a href="https://github.com/antonindanalet/nb-trips-by-public-transport-in-Switzerland/blob/master/data/output/nb_trips_per_person.csv"nb_trips_per_person.csv</a> in `data/output/`.
 
 ## Getting started
 These instructions will get you a copy of the code up and running on your local machine for reproducing the result and understanding how it has been generated.
