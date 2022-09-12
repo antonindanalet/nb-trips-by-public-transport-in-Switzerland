@@ -48,6 +48,3 @@ For it to produce the results, you also need the raw data of the Transport and M
 Please copy the files `wegeinland.csv` and `zielpersonen.csv` from 2015 that you receive from the Swiss Federal Statistical Office (FSO) in the folders "<a href="https://github.com/antonindanalet/nb-trips-by-public-transport-in-Switzerland/tree/master/data/input">data/input</a>". Then run <a href="https://github.com/antonindanalet/nb-trips-by-public-transport-in-Switzerland/blob/master/src/run_nb_trips_by_public_transport.py">run_availability_of_parking.py</a>.
 
 DO NOT commit or share in any way these two CSV-files! These are personal data.
-
-### Contact
-Please don't hesitate to contact me if you have questions or comments about this code: antonin.danalet@are.admin.ch
